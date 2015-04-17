@@ -1,0 +1,28 @@
+---
+title: "Test Harness for RPROG-013 Programming Assignment 2"
+author: "zafbrb"
+date: "Friday, April 17, 2015"
+output: html_document
+---
+
+Created by zafbrb
+
+```{r echo=FALSE}
+source('G:/Learning/R-Lib/ProgrammingAssignment2/ProgrammingAssignment2/cachematrix.R')
+```
+
+Input data is set to:
+
+```
+xSquare <- rbind(c(1,-1/4), c(-1/4, 1))
+xNotSquare <- rbind(c(1,-1/4, 2), c(-1/4, 1, 3))
+xEmpty <- matrix()
+xNotMatrix <- c(1, 2, 3)
+```
+Output is 
+
+```{r}
+testHarness()
+
+```
+
