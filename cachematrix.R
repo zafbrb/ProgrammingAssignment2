@@ -36,21 +36,23 @@ makeCacheMatrix <- function(x = matrix()) {
         
         # OK lets get to work - initialise this enclosure
         invM = matrix()
-        set <- function(y) {
-                x <<- y
-                invM <<- NULL
-        }
+        
+        # Returns the original matrix
         get <- function() {
                 x
         } 
+        
+        # Stores the inverse of the input matrix in the enclosure
         setinvM <- function(im){
                 invM <<- im 
         } 
+
+        # Returns the stored inverted matrix
         getinvM <- function(){
                 invM
         }
-        list(set = set, 
-             get = get,
+        
+        list(get = get,
              setinvM = setinvM, 
              getinvM = getinvM) 
 }
@@ -71,7 +73,7 @@ cacheSolve <- function(x, ...) {
 #       Inverse of matrix used as an arguement to makeCacheMatrix
 # ------------------------------------------------------------------------------        
         # Lets check if this is the special matrix. 
-        # If it is a normal matric calculate the inverse and return it
+        # If it is a normal matrix calculate the inverse and return it
         if(is.matrix(x)){
                 message("Warning: [cacheSolve] Parameter is not the special matrix -- just solving")
                         inv_matrix <- solve(x)
@@ -84,7 +86,9 @@ cacheSolve <- function(x, ...) {
         # Now lets check if we have cached the inversion of the matrix
         inv_mat <- x$getinvM()
         
-        # if its NOT got any NA's then we have cached it 
+        # if its NOT got any NA's then we have cached it. 
+        # This test uses the fact that matrix() is used to initialise the variable inv_mat. 
+        # Matrix() creates a 1 by 1 matrix with NA in the cell
         if(!anyNA(inv_mat)) {
                 message("Info: Using Cached Inversion")
                 return(inv_mat)
@@ -111,14 +115,14 @@ testHarness <- function(){
 #       Test outcomes for each test run
 # ------------------------------------------------------------------------------        
         # Setup some data 
-        xSquare <- rbind(c(1,-1/4), c(-1/4, 1))
+        xSquare <- matrix(c(-1, -2, 1, 1), 2,2)
         xNotSquare <- rbind(c(1,-1/4, 2), c(-1/4, 1, 3))
         xEmpty <- matrix()
         xNotMatrix <- c(1, 2, 3)
         
         # Start the tests - ouput to the console
         message("Starting makeCacheMatrix tests....", "\n")
-        message("### Test1: Square Matrix")
+        message("### Test1: input is a Square Matrix", "\n")
         t1 <- makeCacheMatrix(xSquare)
         print(t1)
         
@@ -132,32 +136,58 @@ testHarness <- function(){
         t1a <- solve(cacheSolve(t1))
         print(t1a)
         message("Test 1 Check if the Inversion of the inversion is equal to the original")
-        print(t1a == xSquare)
+        print(identical(xSquare, t1a))
 
         
-        message("\n","###Test2: Non square Matrix")
+        message("\n","###Test2: Input is Non square Matrix", "\n")
         t2 <- makeCacheMatrix(xNotSquare)
         print(t2)
         
-        message("\n", "###Test3: Empty Matrix")
+        message("\n", "###Test3: input is an Empty Matrix", "\n")
         t3 <- makeCacheMatrix(xEmpty)
         print(t3)
         
-        message("\n", "###Test4: Not a matrix")
+        message("\n", "###Test4: Input is not a matrix", "\n")
         t4 <- makeCacheMatrix(xNotMatrix)
         print(t4)
         
         message("\n", "Testing cacheSolve....", "\n")
-        message("###Test5: cacheSolve - Use special matrix")
+        message("###Test5: cacheSolve - Use special matrix", "\n")
         t5 <- cacheSolve(t1)
         print(t5)
         
-        message("\n", "###Test6: cacheSolve - use Square matrix ")
+        message("\n", "###Test6: cacheSolve - use Square matrix ", "\n")
         t6 <- cacheSolve(xSquare)
         print(t6)
         
-        message("\n", "###Test7: cacheSolve - use Vector")
+        message("\n", "###Test7: cacheSolve - use Vector", "\n")
         t7 <- cacheSolve(xNotMatrix)
         print(t7)
+
+        # Following thanks to Karl Schultz
+        message("\n", "###Test8: Checking Cache...", "\n")
+        n <- 3
+        mat <- matrix(rnorm(1:(n*n)), nrow=n, ncol=n)
+        matCached <- makeCacheMatrix(mat)
+        matSolved1 <- cacheSolve(matCached)
+        matSolved2 <- cacheSolve(matCached)
+        if (!identical(matSolved1, matSolved2)) {
+                message("Fail: Cached version does not match solved version")
+        } else {
+                message("OK: Cached version MATCHES solved version")
+        }
+
+        # # Following thanks to Karl Schultz
+        message("\n", "###Test9: Time Test", "\n")
+        n <- 128
+        mat <- matrix(rnorm(1:(n*n)), nrow=n, ncol=n)
+        matCached <- makeCacheMatrix(mat)
+        time1 <- system.time(matSolved1 <- cacheSolve(matCached))
+        time2 <- system.time(matSolved2 <- cacheSolve(matCached))
+        if (time1["user.self"] < time2["user.self"]) {
+                message("Solve time is less than cache time")
+        } else {
+                message("OK: Solve time is GREATER than cache time")
+        }
         
 }
